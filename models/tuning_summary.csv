@@ -1,0 +1,4 @@
+model,cv_roc_auc,test_roc_auc,best_params
+xgboost,0.8497140754573725,0.8470355731225296,"{'subsample': 0.7, 'n_estimators': 200, 'min_child_weight': 5, 'max_depth': 3, 'learning_rate': 0.05, 'colsample_bytree': 0.7}"
+catboost,0.8505251332311469,0.8469955307551216,"{'learning_rate': 0.05, 'l2_leaf_reg': 7, 'iterations': 200, 'depth': 4}"
+logistic_regression,0.8460822882673407,0.8404763750032292,"{'classifier__C': 10.0, 'classifier__solver': 'lbfgs'}"

@@ -1,112 +1,147 @@
+import argparse
+import json
 import sys
-import os
+from pathlib import Path
 
-# ── Chemins absolus ────────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH  = os.path.join(BASE_DIR, 'data', 'WA_Fn-UseC_-Telco-Customer-Churn.csv')
-MODELS_DIR = os.path.join(BASE_DIR, 'models')
-sys.path.append(os.path.join(BASE_DIR, 'src'))
-
-import xgboost as xgb
-from catboost import CatBoostClassifier
-from sklearn.model_selection import RandomizedSearchCV
-from preprocessing import load_and_preprocess
 import joblib
 import pandas as pd
+import xgboost as xgb
+from catboost import CatBoostClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-# ── Chargement des données ─────────────────────────────────────
-X_train, X_test, y_train, y_test, _, _, feature_cols = \
-    load_and_preprocess(DATA_PATH)
 
-# ══════════════════════════════════════════════════════════════
-# OPTIMISATION XGBOOST
-# ══════════════════════════════════════════════════════════════
-print("\n" + "="*50)
-print("  Optimisation XGBoost en cours...")
-print("="*50)
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
-param_grid_xgb = {
-    'n_estimators'    : [100, 200, 300],
-    'max_depth'       : [3, 5, 7],
-    'learning_rate'   : [0.01, 0.05, 0.1],
-    'subsample'       : [0.7, 0.8, 1.0],
-    'colsample_bytree': [0.7, 0.8, 1.0],
-    'min_child_weight': [1, 3, 5],
-}
+from preprocessing import load_and_preprocess
 
-xgb_base = xgb.XGBClassifier(
-    scale_pos_weight=3,
-    eval_metric='logloss',
-    random_state=42
-)
 
-search_xgb = RandomizedSearchCV(
-    xgb_base, param_grid_xgb,
-    n_iter=30, cv=5, scoring='roc_auc',
-    n_jobs=-1, random_state=42, verbose=1
-)
-search_xgb.fit(X_train, y_train)
+DATA_PATH = ROOT / "data" / "WA_Fn-UseC_-Telco-Customer-Churn.csv"
+MODELS_DIR = ROOT / "models"
 
-print("\nMeilleurs params XGBoost :", search_xgb.best_params_)
-print("Meilleur ROC-AUC          :", round(search_xgb.best_score_, 4))
 
-joblib.dump(
-    search_xgb.best_estimator_,
-    os.path.join(MODELS_DIR, 'xgboost_optimized_model.pkl')
-)
-print("✅ XGBoost optimisé sauvegardé")
+def build_searches(quick=False, n_jobs=1):
+    """Construit RandomizedSearchCV pour les arbres et GridSearchCV pour la baseline."""
+    iterations = 4 if quick else 20
+    cv = 3 if quick else 5
 
-# ══════════════════════════════════════════════════════════════
-# OPTIMISATION CATBOOST
-# ══════════════════════════════════════════════════════════════
-print("\n" + "="*50)
-print("  Optimisation CatBoost en cours...")
-print("="*50)
+    xgb_search = RandomizedSearchCV(
+        xgb.XGBClassifier(scale_pos_weight=3, eval_metric="logloss", random_state=42),
+        {
+            "n_estimators": [100, 200, 300],
+            "max_depth": [3, 5, 7],
+            "learning_rate": [0.01, 0.05, 0.1],
+            "subsample": [0.7, 0.85, 1.0],
+            "colsample_bytree": [0.7, 0.85, 1.0],
+            "min_child_weight": [1, 3, 5],
+        },
+        n_iter=iterations,
+        cv=cv,
+        scoring="roc_auc",
+        n_jobs=n_jobs,
+        random_state=42,
+        verbose=1,
+    )
+    cat_search = RandomizedSearchCV(
+        CatBoostClassifier(
+            loss_function="Logloss", class_weights=(1, 3), verbose=0, random_seed=42
+        ),
+        {
+            "iterations": [200, 300, 500],
+            "depth": [4, 6, 8],
+            "learning_rate": [0.01, 0.05, 0.1],
+            "l2_leaf_reg": [1, 3, 5, 7],
+        },
+        n_iter=iterations,
+        cv=cv,
+        scoring="roc_auc",
+        n_jobs=n_jobs,
+        random_state=42,
+        verbose=1,
+    )
+    logistic_search = GridSearchCV(
+        Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "classifier",
+                    LogisticRegression(
+                        class_weight="balanced", max_iter=1000, random_state=42
+                    ),
+                ),
+            ]
+        ),
+        {
+            "classifier__C": [0.1, 1.0, 10.0],
+            "classifier__solver": ["liblinear", "lbfgs"],
+        },
+        cv=cv,
+        scoring="roc_auc",
+        n_jobs=n_jobs,
+        verbose=1,
+    )
+    return {
+        "xgboost": xgb_search,
+        "catboost": cat_search,
+        "logistic_regression": logistic_search,
+    }
 
-param_grid_cat = {
-    'iterations'   : [200, 300, 500],
-    'depth'        : [4, 6, 8],
-    'learning_rate': [0.01, 0.05, 0.1],
-    'l2_leaf_reg'  : [1, 3, 5, 7],
-}
 
-cat_base = CatBoostClassifier(
-    loss_function='Logloss',
-    class_weights=[1, 3],
-    verbose=0,
-    random_seed=42
-)
+def run_tuning(quick=False, n_jobs=1):
+    X_train, X_test, y_train, y_test, *_ = load_and_preprocess(DATA_PATH)
+    summaries = []
 
-search_cat = RandomizedSearchCV(
-    cat_base, param_grid_cat,
-    n_iter=20, cv=5, scoring='roc_auc',
-    n_jobs=-1, random_state=42, verbose=1
-)
-search_cat.fit(X_train, y_train)
+    for name, search in build_searches(quick, n_jobs=n_jobs).items():
+        print(f"\nOptimisation {name}...")
+        search.fit(X_train, y_train)
+        estimator = search.best_estimator_
+        test_roc_auc = roc_auc_score(y_test, estimator.predict_proba(X_test)[:, 1])
+        joblib.dump(estimator, MODELS_DIR / f"{name}_optimized_model.pkl")
 
-print("\nMeilleurs params CatBoost :", search_cat.best_params_)
-print("Meilleur ROC-AUC           :", round(search_cat.best_score_, 4))
+        summary = {
+            "model": name,
+            "cv_roc_auc": search.best_score_,
+            "test_roc_auc": test_roc_auc,
+            "best_params": search.best_params_,
+        }
+        summaries.append(summary)
+        pd.DataFrame(search.cv_results_).sort_values("rank_test_score").to_csv(
+            MODELS_DIR / f"{name}_tuning_results.csv", index=False
+        )
 
-joblib.dump(
-    search_cat.best_estimator_,
-    os.path.join(MODELS_DIR, 'catboost_optimized_model.pkl')
-)
-print("✅ CatBoost optimisé sauvegardé")
+    comparison = pd.DataFrame(summaries)
+    comparison.to_csv(MODELS_DIR / "tuning_summary.csv", index=False)
+    with open(MODELS_DIR / "best_hyperparameters.json", "w", encoding="utf-8") as file:
+        json.dump(
+            {row["model"]: row["best_params"] for row in summaries},
+            file,
+            indent=2,
+        )
+    return comparison
 
-# ══════════════════════════════════════════════════════════════
-# TABLEAU COMPARATIF FINAL
-# ══════════════════════════════════════════════════════════════
-print("\n" + "="*50)
-print("  Comparaison des meilleurs résultats")
-print("="*50)
 
-results_xgb = pd.DataFrame(search_xgb.cv_results_).sort_values('rank_test_score')
-results_cat = pd.DataFrame(search_cat.cv_results_).sort_values('rank_test_score')
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Recherche courte pour validation locale rapide.",
+    )
+    parser.add_argument(
+        "--n-jobs",
+        type=int,
+        default=1,
+        help="Nombre de processus paralleles utilises par sklearn.",
+    )
+    args = parser.parse_args()
+    comparison = run_tuning(quick=args.quick, n_jobs=args.n_jobs)
+    print("\nResultats optimisation")
+    print(comparison[["model", "cv_roc_auc", "test_roc_auc"]].round(4).to_string(index=False))
 
-print("\nTop 5 XGBoost :")
-print(results_xgb[['params', 'mean_test_score', 'std_test_score']].head(5).to_string())
 
-print("\nTop 5 CatBoost :")
-print(results_cat[['params', 'mean_test_score', 'std_test_score']].head(5).to_string())
-
-print("\n✅ Optimisation terminée ! Modèles sauvegardés dans /models")
+if __name__ == "__main__":
+    main()

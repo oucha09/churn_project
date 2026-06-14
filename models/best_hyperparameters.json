@@ -1,0 +1,20 @@
+{
+  "xgboost": {
+    "subsample": 0.7,
+    "n_estimators": 200,
+    "min_child_weight": 5,
+    "max_depth": 3,
+    "learning_rate": 0.05,
+    "colsample_bytree": 0.7
+  },
+  "catboost": {
+    "learning_rate": 0.05,
+    "l2_leaf_reg": 7,
+    "iterations": 200,
+    "depth": 4
+  },
+  "logistic_regression": {
+    "classifier__C": 10.0,
+    "classifier__solver": "lbfgs"
+  }
+}

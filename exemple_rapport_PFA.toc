@@ -1,0 +1,38 @@
+\babel@toc {french}{}\relax 
+\contentsline {section}{Liste des figures}{4}{section*.1}%
+\contentsline {section}{Liste des tableaux}{5}{section*.2}%
+\contentsline {section}{Introduction générale}{6}{section*.2}%
+\contentsline {section}{\numberline {1}Informations Générales}{7}{section.3}%
+\contentsline {subsection}{\numberline {1.1}Contexte et problématique}{7}{subsection.4}%
+\contentsline {subsection}{\numberline {1.2}Objectifs}{7}{subsection.5}%
+\contentsline {subsection}{\numberline {1.3}Architecture de la solution}{7}{subsection.6}%
+\contentsline {subsection}{\numberline {1.4}Démarche méthodologique}{8}{subsection.7}%
+\contentsline {section}{\numberline {2}Chapitre 1 : Prétraitement et analyse exploratoire}{8}{section.8}%
+\contentsline {subsection}{\numberline {2.1}Présentation du dataset}{8}{subsection.9}%
+\contentsline {subsection}{\numberline {2.2}Description des groupes de variables}{9}{subsection.12}%
+\contentsline {subsection}{\numberline {2.3}Diagnostic de qualité des données}{9}{subsection.15}%
+\contentsline {subsection}{\numberline {2.4}Nettoyage, imputation et encodage}{9}{subsection.16}%
+\contentsline {subsection}{\numberline {2.5}Prévention des fuites de données}{10}{subsection.23}%
+\contentsline {subsection}{\numberline {2.6}Principaux résultats de l'analyse exploratoire}{10}{subsection.24}%
+\contentsline {subsection}{\numberline {2.7}Interprétation métier de l'analyse exploratoire}{10}{subsection.27}%
+\contentsline {section}{\numberline {3}Chapitre 2 : Entraînement et évaluation des modèles}{11}{section.28}%
+\contentsline {subsection}{\numberline {3.1}Formulation du problème}{11}{subsection.29}%
+\contentsline {subsection}{\numberline {3.2}Modèles et protocole d'entraînement}{11}{subsection.30}%
+\contentsline {subsection}{\numberline {3.3}Définition des métriques}{11}{subsection.31}%
+\contentsline {subsection}{\numberline {3.4}Métriques d'évaluation}{12}{subsection.34}%
+\contentsline {subsection}{\numberline {3.5}Optimisation des hyperparamètres}{13}{subsection.39}%
+\contentsline {subsection}{\numberline {3.6}Choix du modèle et limites de l'évaluation}{13}{subsection.44}%
+\contentsline {section}{\numberline {4}Chapitre 3 : Interprétation et recommandations métier}{14}{section.45}%
+\contentsline {subsection}{\numberline {4.1}Objectif de l'interprétabilité}{14}{subsection.46}%
+\contentsline {subsection}{\numberline {4.2}Analyse de feature importance}{14}{subsection.47}%
+\contentsline {subsection}{\numberline {4.3}Lecture croisée des modèles}{15}{subsection.54}%
+\contentsline {subsection}{\numberline {4.4}Segmentation du risque}{15}{subsection.57}%
+\contentsline {subsection}{\numberline {4.5}Recommandations de fidélisation}{16}{subsection.58}%
+\contentsline {subsection}{\numberline {4.6}Mise à disposition avec Streamlit}{16}{subsection.61}%
+\contentsline {subsection}{\numberline {4.7}Parcours utilisateur et architecture de déploiement}{16}{subsection.62}%
+\contentsline {subsection}{\numberline {4.8}Suivi opérationnel recommandé}{17}{subsection.63}%
+\contentsline {section}{Conclusion générale}{18}{subsection.63}%
+\contentsline {section}{Bibliographie}{19}{subsection.63}%
+\contentsline {section}{\numberline {5}Annexes}{20}{section.64}%
+\contentsline {subsection}{\numberline {5.1}Structure du repository}{20}{subsection.65}%
+\contentsline {subsection}{\numberline {5.2}Commandes d'exécution}{20}{subsection.66}%
