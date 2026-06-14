@@ -78,36 +78,25 @@ python Bonus/hyperparameter_tuning.py
 
 ## Applications Streamlit
 
-### Application de prediction
+### Application multipage ChurnPulse
 
-L'application principale `app.py` fournit :
+L'application principale `app.py` fournit quatre pages Streamlit distinctes :
 
-- un formulaire interactif de saisie des informations client ;
-- le choix entre XGBoost, CatBoost et Logistic Regression ;
-- l'affichage de la prediction `Churn` ou `No Churn` ;
-- la probabilite estimee de churn ;
-- le segment client et une recommandation de fidelisation automatisee ;
-- les matrices de confusion et courbes ROC ;
-- la distribution des probabilites, les importances de variables et la
-  comparaison des modeles.
+- `Dashboard` : KPIs et analyses graphiques ;
+- `Prediction` : formulaire client, prediction et recommandation ;
+- `Customers` : liste, recherche et filtrage des clients ;
+- `Models` : performances, backtesting et importance des variables.
 
-Application de prediction :
+Application multipage :
 
 ```bash
 python -m streamlit run app.py
 ```
 
-### Dashboard analytique interactif
+### Dashboard analytique autonome
 
-Le dashboard `Bonus/dashboard_analytics.py` fournit :
-
-- des filtres interactifs par contrat, service Internet et anciennete ;
-- les KPIs de churn et le revenu mensuel a risque ;
-- les distributions du churn et des charges mensuelles ;
-- les analyses par contrat, service Internet et anciennete ;
-- la comparaison des modeles et les resultats d'optimisation ;
-- la segmentation des clients a risque ;
-- les recommandations de fidelisation automatisees.
+Le dashboard `Bonus/dashboard_analytics.py` reste disponible en lancement
+autonome et reprend la page Dashboard de l'application multipage.
 
 Dashboard analytique :
 
